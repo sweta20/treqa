@@ -1,2 +1,3 @@
-# treqa
-LLM-based QAG framework for MT Evaluation
+# Translation Evaluation via Question Answering (TREQA)
+
+Coming soon
