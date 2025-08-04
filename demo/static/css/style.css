@@ -1,0 +1,316 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Lora:wght@400;600&display=swap');
+
+:root {
+    --primary-color: #005f73;
+    --secondary-color: #0a9396;
+    --accent-color: #94d2bd;
+    --background-color: #f8f9fa;
+    --text-color: #343a40;
+    --light-gray: #e9ecef;
+    --dark-gray: #6c757d;
+    --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.07);
+    --border-radius: 12px;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    line-height: 1.7;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 0;
+    scroll-behavior: smooth;
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+header {
+    text-align: center;
+    padding: 3rem 0;
+    border-bottom: 1px solid var(--light-gray);
+}
+
+header h1 {
+    font-family: 'Lora', serif;
+    font-size: 2.8rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+header .sub-title {
+    font-size: 1.2rem;
+    color: var(--dark-gray);
+    margin-top: -1rem;
+    margin-bottom: 1.5rem;
+}
+
+header .authors {
+    font-size: 1.1rem;
+    color: var(--dark-gray);
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+}
+
+header .links a {
+    color: var(--secondary-color);
+    text-decoration: none;
+    font-weight: 500;
+    margin: 0 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+header .links a:hover {
+    background-color: #eef7f7;
+    border-color: var(--accent-color);
+}
+
+.abstract {
+    background-color: #ffffff;
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    margin-top: 2rem;
+    box-shadow: var(--card-shadow);
+}
+
+.abstract h2 {
+    font-family: 'Lora', serif;
+    color: var(--primary-color);
+    margin-top: 0;
+    text-align: center;
+}
+
+.section {
+    padding: 3rem 0;
+    border-bottom: 1px solid var(--light-gray);
+}
+.section:last-child {
+    border-bottom: none;
+}
+
+h2.section-title {
+    text-align: center;
+    font-family: 'Lora', serif;
+    font-size: 2.2rem;
+    color: var(--primary-color);
+    margin-bottom: 2rem;
+}
+
+.main-diagram img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--border-radius);
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--light-gray);
+}
+.main-diagram p {
+    text-align: center;
+    color: var(--dark-gray);
+    font-style: italic;
+    margin-top: 1rem;
+}
+
+#interactive-demo {
+    background-color: #ffffff;
+    padding: 2.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--card-shadow);
+}
+
+.input-group {
+    margin-bottom: 1.5rem;
+}
+
+.input-group label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: var(--primary-color);
+}
+
+textarea, .candidate-input-group input {
+    width: 100%;
+    padding: 0.8rem;
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+}
+
+textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+textarea:focus, .candidate-input-group input:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+}
+
+#candidates-container .candidate-input-group {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+#candidates-container input {
+    flex-grow: 1;
+}
+
+.remove-candidate-btn {
+    margin-left: 0.5rem;
+    padding: 0.6rem;
+    border: none;
+    background-color: #fde8e8;
+    color: #c0392b;
+    border-radius: 50%;
+    cursor: pointer;
+    font-weight: bold;
+    width: 35px;
+    height: 35px;
+    line-height: 1;
+    transition: all 0.2s ease;
+}
+.remove-candidate-btn:hover {
+    background-color: #e74c3c;
+    color: white;
+}
+
+#add-candidate-btn, #run-treqa-btn {
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+    display: inline-block;
+}
+#add-candidate-btn {
+    background-color: var(--accent-color);
+    color: var(--primary-color);
+    margin-top: 0.5rem;
+}
+
+#add-candidate-btn:hover, #run-treqa-btn:hover {
+    background-color: var(--primary-color);
+}
+
+.button-container {
+    text-align: center;
+    margin-top: 2rem;
+}
+
+#results-container {
+    margin-top: 3rem;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    display: none;
+    text-align: center;
+}
+#results-container.visible {
+    opacity: 1;
+    transform: translateY(0);
+    display: block;
+    text-align: left;
+}
+
+.result-step {
+    background-color: #ffffff;
+    padding: 1.5rem 2rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 1.5rem;
+    border-left: 5px solid var(--accent-color);
+}
+
+.result-step h3 {
+    color: var(--primary-color);
+    margin-top: 0;
+    font-family: 'Lora', serif;
+}
+
+.question-list {
+    list-style-type: none;
+    padding-left: 0;
+}
+.question-list li {
+    background-color: #f1f8f7;
+    padding: 0.8rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+}
+
+.answers-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+.answers-table th, .answers-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--light-gray);
+}
+.answers-table th {
+    background-color: #eef7f7;
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+.score-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f1f8f7;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+.score-card .score-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+}
+
+.score-card.high-score .score-value {
+    background-color: #d4edda;
+    color: #155724;
+}
+.score-card.low-score .score-value {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.loading-spinner {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--accent-color);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s ease-in-out infinite;
+    margin-bottom: 1rem;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+footer {
+    text-align: center;
+    padding: 2rem 0;
+    color: var(--dark-gray);
+    font-size: 0.9rem;
+}
+

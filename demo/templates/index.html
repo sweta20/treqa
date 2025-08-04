@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TREQA: Evaluating Paragraph-level MT with Question Answering</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Added styles for the new results layout and running signal -->
+    <style>
+        .question-result-block {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .question-result-block h4 {
+            margin-top: 0;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .answers-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .answers-table th, .answers-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        .answers-table th {
+            color: var(--dark-gray);
+            font-size: 0.9em;
+        }
+        .answers-table tr:last-child td {
+            border-bottom: none;
+        }
+        .answers-table .reference-row {
+            background-color: #f0f8ff;
+        }
+        .score-cell {
+            text-align: center;
+            font-weight: bold;
+        }
+        .score-badge {
+            display: inline-block;
+            padding: 0.3em 0.6em;
+            border-radius: 12px;
+            color: white;
+            font-size: 0.9em;
+        }
+        .score-badge.high-score {
+            background-color: #28a745;
+        }
+        .score-badge.low-score {
+            background-color: #dc3545;
+        }
+
+        /* --- Styles for Running Signal --- */
+        #run-treqa-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+        }
+        #run-treqa-btn .btn-spinner {
+            display: none; /* Hidden by default */
+            width: 1em;
+            height: 1em;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+        }
+        #run-treqa-btn.running .btn-spinner {
+            display: inline-block; /* Shown when button has 'running' class */
+        }
+        #run-treqa-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <h1>Do LLMs Understand Your Translations?</h1>
+            <p class="sub-title">Evaluating Paragraph-level MT with Question Answering</p>
+            <div class="authors">
+                Patrick Fernandes, Sweta Agrawal, Emmanouil Zaranis, <br> André F.T. Martins, Graham Neubig
+            </div>
+            <div class="links">
+                <a href="https://arxiv.org/abs/2504.07583" target="_blank">📄 Paper</a>
+                <a href="https://github.com/deep-spin/treqa" target="_blank">💻 Code</a>
+                <a href="#interactive-demo">🚀 Live Demo</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="abstract">
+            <h2>Abstract</h2>
+            <p>Despite the steady progress in machine translation evaluation, existing automatic metrics struggle to capture how well meaning is preserved beyond sentence boundaries. We posit that reliance on a single intrinsic quality score, trained to mimic human judgments, might be insufficient for evaluating translations of long, complex passages, and a more “pragmatic” approach that assesses how accurately key information is conveyed by a translation in context is needed. We introduce <strong>TREQA (Translation Evaluation via Question-Answering)</strong>, a framework that extrinsically evaluates translation quality by assessing how accurately candidate translations answer reading comprehension questions that target key information in the original source or reference texts...</p>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">The TREQA Framework</h2>
+            <div class="main-diagram">
+                <img src="{{ url_for('static', filename='img/treqa_diagram.jpg') }}" alt="Diagram showing the TREQA framework.">
+                <p>Figure 1: TREQA assesses translation quality through a question-answering framework.</p>
+            </div>
+        </section>
+        
+        <section id="interactive-demo" class="section">
+            <h2 class="section-title">Try TREQA Live</h2>
+            <p style="text-align: center; max-width: 700px; margin: 0 auto 2rem auto;">This demo uses an example from the paper (Figure 6) to show how TREQA identifies subtle translation errors. You can edit the text or add your own candidates.</p>
+            <div class="input-group">
+                <label for="source-text">Source Text</label>
+                <textarea id="source-text" placeholder="Enter original source text...">A cidade de Lisboa é a capital de Portugal. Cientistas descobriram uma nova espécie de pássaro na floresta amazônica. A economia portuguesa cresceu 2.5% no último trimestre.</textarea>
+            </div>
+            <div class="input-group">
+                <label for="reference-text">Reference Translation</label>
+                <textarea id="reference-text">The city of Lisbon is the capital of Portugal. Scientists discovered a new bird species in the Amazon rainforest. The Portuguese economy grew by 2.5% in the last quarter.</textarea>
+            </div>
+            <div class="input-group">
+                <label for="candidates-container">Candidate Translations</label>
+                <div id="candidates-container"></div>
+                <button id="add-candidate-btn">+ Add another candidate</button>
+            </div>
+            <div class="button-container">
+                <!-- FIX: Updated button structure for running signal -->
+                <button id="run-treqa-btn">
+                    <span class="btn-text">Run TREQA Evaluation</span>
+                    <span class="btn-spinner"></span>
+                </button>
+            </div>
+            
+            <div id="results-container"></div>
+        </section>
+    </main>
+    
+    <footer>
+        <div class="container">
+            Published as a conference paper at COLM 2025.
+        </div>
+    </footer>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const candidatesContainer = document.getElementById('candidates-container');
+        const addCandidateBtn = document.getElementById('add-candidate-btn');
+        const runTreqaBtn = document.getElementById('run-treqa-btn');
+        const resultsContainer = document.getElementById('results-container');
+        
+        let candidateCount = 0;
+
+        const initialCandidates = [
+            "The city of Lisbon is Portugal's capital. Scientists have found a new species of bird in the Amazon rainforest. Portugal's economy grew by 2.5% in the last quarter.",
+            "The city of Lisbon is the capital of Spain. Scientists have found a new species of fish in the Amazon rainforest. The Portuguese economy grew by 2.5% in the last year."
+        ];
+
+        function addCandidate(value = '') {
+            candidateCount++;
+            const div = document.createElement('div');
+            div.className = 'candidate-input-group';
+            div.innerHTML = `
+                <textarea placeholder="Candidate Translation ${candidateCount}">${value}</textarea>
+                <button class="remove-candidate-btn">&times;</button>
+            `;
+            candidatesContainer.appendChild(div);
+            div.querySelector('.remove-candidate-btn').addEventListener('click', () => div.remove());
+        }
+
+        addCandidateBtn.addEventListener('click', () => addCandidate());
+        initialCandidates.forEach(cand => addCandidate(cand));
+
+        // FIX: Updated click handler with running signal logic
+        runTreqaBtn.addEventListener('click', async function() {
+            const buttonText = runTreqaBtn.querySelector('.btn-text');
+            
+            // --- 1. Start Running Signal ---
+            runTreqaBtn.disabled = true;
+            runTreqaBtn.classList.add('running');
+            buttonText.textContent = 'Evaluating...';
+            resultsContainer.innerHTML = '<div class="loading-spinner"></div><h3>Please wait, running evaluation...</h3>';
+            resultsContainer.classList.add('visible');
+
+            const sourceText = document.getElementById('source-text').value;
+            const referenceText = document.getElementById('reference-text').value;
+            const candidateInputs = candidatesContainer.querySelectorAll('textarea');
+            const candidates = Array.from(candidateInputs).map(input => input.value);
+
+            // --- 2. Perform Async Operation with try...finally ---
+            try {
+                const response = await fetch('/evaluate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        source: sourceText,
+                        reference: referenceText,
+                        candidates: candidates
+                    }),
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP error! Status: ${response.status}. Server response: ${errorText}`);
+                }
+
+                const results = await response.json();
+                renderResults(results.questions, results.reference_answers, candidates, results.candidate_answers, results.scores);
+
+            } catch (error) {
+                console.error("Error calling evaluation API:", error);
+                resultsContainer.innerHTML = `<p class="error">An error occurred while running the evaluation. Please check the browser's developer console for details.</p>`;
+                resultsContainer.classList.add('visible');
+            } finally {
+                // --- 3. Reset Button State (always runs) ---
+                runTreqaBtn.disabled = false;
+                runTreqaBtn.classList.remove('running');
+                buttonText.textContent = 'Run TREQA Evaluation';
+            }
+        });
+        
+        function renderResults(questions, refAnswers, candidates, candAnswers, scores) {
+            // ... (this function remains the same) ...
+            let html = `
+                <div class="result-step">
+                    <h3><span style="font-size: 1.5em; vertical-align: middle;">1.</span> Question Generation (QAG)</h3>
+                    <p>TREQA generates questions that target key information.</p>
+                    <ul class="question-list">
+                        ${questions.map(q => `<li>${q}</li>`).join('')}
+                    </ul>
+                </div>
+                <div class="result-step">
+                    <h3><span style="font-size: 1.5em; vertical-align: middle;">2 & 3.</span> Answering & Scoring</h3>
+                    <p>For each question, the system finds an answer in the reference and candidate texts, then scores the candidate's answer against the reference's.</p>
+                    ${questions.map((question, q_idx) => `
+                    <div class="question-result-block">
+                        <h4>Question ${q_idx + 1}: ${question}</h4>
+                        <table class="answers-table">
+                            <thead>
+                                <tr>
+                                    <th>Translation</th>
+                                    <th>Answer from Text</th>
+                                    <th>Score</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="reference-row">
+                                    <td><strong>Reference</strong></td>
+                                    <td><em>"${refAnswers[q_idx]}"</em></td>
+                                    <td class="score-cell">--</td>
+                                </tr>
+                                ${candidates.map((cand, c_idx) => `
+                                <tr>
+                                    <td><strong>Candidate ${c_idx + 1}</strong></td>
+                                    <td><em>"${candAnswers[c_idx][q_idx]}"</em></td>
+                                    <td class="score-cell">
+                                        <span class="score-badge ${scores[c_idx][q_idx].rating}">
+                                            ${scores[c_idx][q_idx].score.toFixed(2)}
+                                        </span>
+                                    </td>
+                                </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    `).join('')}
+                </div>
+            `;
+            resultsContainer.innerHTML = html;
+            resultsContainer.classList.add('visible');
+        }
+    });
+    </script>
+</body>
+</html>
